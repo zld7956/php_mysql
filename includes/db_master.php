@@ -11,7 +11,7 @@
 class db_master extends db{
 
     private $table_name;
-    private $tab_info;
+    private $table_info;
 
     /**
      * db_master constructor.
@@ -27,16 +27,26 @@ class db_master extends db{
         return $this;
     }
 
+
     /**
      * 根据提交过来的数据自动组成插入语句
+     * @param $table_name 要更新的表名，不会更改对象中设定的表名
      * @return 返回插入成功与否
      */
-    function insert(){
+    function insert($table_name = ''){
+
+        if(!$table_name){
+            $table_name = $this->table_name;
+            $table_info = $this->table_info;
+        }else{
+            $table_info = $this->tables_info[$table_name];
+        }
+
         $cols = array();
         $vals = array();
-        for($i = 1; $i < count($this->tab_info); $i ++){
+        for($i = 1; $i < count($table_info); $i ++){
             foreach ($_REQUEST as $k => $v){
-                if($k == $this->tab_info[$i]){
+                if($k == $table_info[$i]){
                     $cols[] = $k;
                     $vals[] = $v;
                 }
@@ -46,7 +56,7 @@ class db_master extends db{
         $cols = "`" . implode("`,`",$cols) . "`";           //将列组合起来
         $vals = "'" . implode("','",$vals) . "'";           //将值组合起来
 
-        $sql = "INSERT INTO `$this->table_name` ($cols) 
+        $sql = "INSERT INTO `$table_name` ($cols) 
                 VALUES ($vals)";
         echo $sql;
 //        return parent::query($sql);
@@ -55,21 +65,29 @@ class db_master extends db{
     /**
      * 删除记录
      * @param string $whr 可选项，如果提交的信息含有主键id此参数可不填写，如有特殊删除条件则填写此参数
+     * @param $table_name 要更新的表名，不会更改对象中设定的表名
      * @return bool 返回执行成功与否
      */
-    function del($whr = ''){
+    function del($whr = '', $table_name = ''){
+
+        if(!$table_name){
+            $table_name = $this->table_name;
+            $table_info = $this->table_info;
+        }else{
+            $table_info = $this->tables_info[$table_name];
+        }
 
         if(!$whr){
             //循环提交过来的信息检查是否有与表中的第一列字段相吻合的
             foreach ($_REQUEST as $k => $v){
-                if($k == $this->tab_info[0]){
+                if($k == $table_info[0]){
                     $whr = " `$k` = '$v' ";
                 }
             }
         }
         if($whr){
             $sql = "DELETE 
-                    FROM $this->table_name
+                    FROM $table_name
                     WHERE $whr";
             echo $sql;
 //            return parent::query($sql);
@@ -79,26 +97,34 @@ class db_master extends db{
 
     /**
      * 根据主键id自动更新记录
+     * @param $whr 更新条件
+     * @param $table_name 要更新的表名，不会更改对象中设定的表名
      * @return bool
      */
-    function update(){
-        $whr = '';
+    function update($whr = '', $table_name = ''){
+
+        if(!$table_name){
+            $table_name = $this->table_name;
+            $table_info = $this->table_info;
+        }else{
+            $table_info = $this->tables_info[$table_name];
+        }
         $datas = array();
-        for($i = 0; $i < count($this->tab_info); $i ++){
+        for($i = 0; $i < count($table_info); $i ++){
             foreach ($_REQUEST as $k => $v){
                 if($i == 0){
-                    if($k == $this->tab_info[$i]){
+                    if($k == $table_info[$i] && !$whr){
                         $whr = " `$k` = '$v' ";
                     }
                 }
-                elseif($k == $this->tab_info[$i]){
+                elseif($k == $table_info[$i]){
                     $datas[] = "`" . $k . "` = '$v'";
                 }
             }
         }
         if($whr){
             $datas = implode(",",$datas);
-            $sql = "UPDATE `$this->table_name` SET $datas WHERE $whr";
+            $sql = "UPDATE `$table_name` SET $datas WHERE $whr";
             echo $sql;
 //            return parent::query($sql);
         }
@@ -112,7 +138,7 @@ class db_master extends db{
     function set_table_name($table_name){
         if($table_name) {
             $this->table_name = $table_name;
-            $this->tab_info = $this->table_info[$this->table_name];
+            $this->table_info = $this->tables_info[$this->table_name];
         }
     }
 }

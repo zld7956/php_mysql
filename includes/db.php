@@ -12,7 +12,7 @@
 
         private $config;
         protected $mysql;
-        protected $table_info = array();
+        protected $tables_info = array();
 
         /**
          * db constructor.
@@ -74,7 +74,7 @@
                   WHERE table_schema = '$db'";
             if($result = $this->select($sql,10)){
                 foreach ($result as $row){
-                    $this->table_info[$row['TABLE_NAME']][] = $row['COLUMN_NAME'];
+                    $this->tables_info[$row['TABLE_NAME']][] = $row['COLUMN_NAME'];
                 }
             }
     //        print_r($this->table_info);
